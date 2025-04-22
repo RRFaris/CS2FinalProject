@@ -25,12 +25,7 @@ public class GameViewer extends JFrame {
             for (int i = 0; i < game.BOARD_WIDTH; i++) {
                 for (int j = 0; j < game.BOARD_HEIGHT; j++) {
                     tile = game.getBoard()[i][j];
-                    g.setColor(Color.BLACK);
                     tile.draw(g);
-                    if (tile.getIsMine()) {
-                        g.setColor(Color.GREEN);
-                        g.fillRect(tile.getTileX(), tile.getTileY(), Tile.TILE_WIDTH, Tile.TILE_WIDTH);
-                    }
                 }
             }
         }
