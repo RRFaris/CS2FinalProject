@@ -11,6 +11,7 @@ public class Tile {
     public static final int TILE_WIDTH = 40;
 
     private boolean isMine;
+    private boolean isHighlighted;
 
     // How many mines surround the tile
     private int numMines;
@@ -22,6 +23,7 @@ public class Tile {
     private Image landTileImage;
     private Image numMinesImage;
     private Image flagImage;
+    private Image highlightedTileImage;
 
     // Window coordinates
     private int tileX;
@@ -46,6 +48,7 @@ public class Tile {
         emptyTileImage = emptyImage;
         landTileImage = landImage;
         flagImage = new ImageIcon("Resources/flag.png").getImage();
+        highlightedTileImage = new ImageIcon("Resources/highlightedTile.png").getImage();
     }
 
     // Getters
@@ -73,6 +76,14 @@ public class Tile {
         return row;
     }
 
+    public int getNumMines() {
+        return numMines;
+    }
+
+    public boolean getIsHighlighted() {
+        return isHighlighted;
+    }
+
     // Setters
     public void setIsMine(boolean isMine) {
         this.isMine = isMine;
@@ -85,6 +96,10 @@ public class Tile {
 
     public void setState(int state) {
         this.state = state;
+    }
+
+    public void setHighlighted(boolean isHighlighted) {
+        this.isHighlighted = isHighlighted;
     }
 
     public boolean isClicked(int mouseX, int mouseY) {
@@ -109,6 +124,13 @@ public class Tile {
         numMinesImage = new ImageIcon("Resources/" + numMines + ".png").getImage();
     }
 
+    public boolean highlight(int mouseX, int mouseY) {
+        if ((mouseX > tileX && mouseX < (tileX + TILE_WIDTH)) && (mouseY > tileY && mouseY < (tileY + TILE_WIDTH)))
+            return true;
+        else
+            return false;
+    }
+
     public void draw(Graphics g) {
         Image tileImage = null;
         Image numMinesImage = null;
@@ -118,18 +140,20 @@ public class Tile {
         }
         else {
             tileImage = emptyTileImage;
-            numMinesImage = emptyTileImage;
+            numMinesImage = null;
+
+            if (isHighlighted)
+                tileImage = highlightedTileImage;
         }
+
+
+
         g.drawImage(tileImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
         g.drawImage(numMinesImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
 
+
+        // Need to draw flag after others so it doesn't get covered
         if (state == FLAG)
             g.drawImage(flagImage,tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
-
-        // Debug purposes
-//        if (isMine) {
-//            g.setColor(Color.RED);
-//            g.fillRect(tileX, tileY, TILE_WIDTH, TILE_WIDTH);
-//        }
     }
 }
