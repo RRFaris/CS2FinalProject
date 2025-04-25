@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public class Game implements MouseListener, MouseMotionListener {
     private Tile[][] board;
     private final int TOTAL_MINES = 40;
+    private final int TOTAL_TILES = 252;
 
     public static final int BOARD_WIDTH = 18;
     public static final int BOARD_HEIGHT = 14;
@@ -21,6 +22,7 @@ public class Game implements MouseListener, MouseMotionListener {
     public final int WELCOME = 0;
     public final int PLAYING = 1;
     public final int LOST = 2;
+    public final int WON = 3;
 
     GameViewer window;
 
@@ -31,6 +33,7 @@ public class Game implements MouseListener, MouseMotionListener {
 
     // Use to set up the mines after user's first click
     int numMouseClicks;
+    int numLand;
 
     public Game() {
         window = new GameViewer(this);
@@ -45,16 +48,19 @@ public class Game implements MouseListener, MouseMotionListener {
             for (int j = 0; j < BOARD_HEIGHT; j++) {
                 // Make color alternate between tiles
                 if ((i + j) % 2 == 0) {
-                    emptyTileImage = new ImageIcon("Resources/emptyLightTile.png").getImage();
-                    landTileImage = new ImageIcon("Resources/landLightTile.png").getImage();
+                    emptyTileImage = new ImageIcon("Resources/Tiles/emptyLightTile.png").getImage();
+                    landTileImage = new ImageIcon("Resources/Tiles/landLightTile.png").getImage();
                 }
                 else {
-                    emptyTileImage = new ImageIcon("Resources/emptyDarkTile.png").getImage();
-                    landTileImage = new ImageIcon("Resources/landDarkTile.png").getImage();
+                    emptyTileImage = new ImageIcon("Resources/Tiles/emptyDarkTile.png").getImage();
+                    landTileImage = new ImageIcon("Resources/Tiles/landDarkTile.png").getImage();
                 }
                 board[i][j] = new Tile(window.BOARD_X + (i*Tile.TILE_WIDTH), window.BOARD_Y + (j*Tile.TILE_WIDTH), i, j, emptyTileImage, landTileImage);
             }
         }
+
+        // Initialize how much land there is
+        numLand = 0;
 
         // Initialize MouseListener
         window.addMouseListener(this);
@@ -91,7 +97,6 @@ public class Game implements MouseListener, MouseMotionListener {
 
         if (state == PLAYING) {
             // All the setup stuff that happens right after the user's first click
-
             Tile startingTile = null;
 
             if (numMouseClicks == 1) {
@@ -99,6 +104,8 @@ public class Game implements MouseListener, MouseMotionListener {
                 for (int i = 0; i < BOARD_WIDTH; i++) {
                     for (int j = 0; j < BOARD_HEIGHT; j++) {
                         if (board[i][j].isClicked(mouseX, mouseY)) {
+                            numLand++;
+                            System.out.println(numLand);
                             startingTile = board[i][j];
                             startingTile.setState(Tile.LAND);
                         }
@@ -106,17 +113,18 @@ public class Game implements MouseListener, MouseMotionListener {
                 }
 
                 // Distributes mines after first click
-                distributeMines();
+                distributeMines(startingTile.getRow(), startingTile.getCol());
 
-                // Spawns in user's starting area
-                fillEmptyTiles(startingTile);
-
+                // Sets each tile's number of mines
                 for (int i = 0; i < BOARD_WIDTH; i++) {
                     for (int j = 0; j < BOARD_HEIGHT; j++) {
-                        // Sets each tile's number of mines
                         board[i][j].countNumMines(board);
                     }
                 }
+
+                // Spawns in user's starting area
+                fillEmptyTiles(startingTile);
+                System.out.println(numLand);
             }
 
             // Main game "loop"
@@ -128,15 +136,23 @@ public class Game implements MouseListener, MouseMotionListener {
                             // Check if user lost
                             if (mouseButton == MouseEvent.BUTTON1 && isLost(i, j)) {
                                 state = LOST;
-                                System.out.println("user lost");
+                                System.out.println("User Lost");
                                 break;
                             }
+                            // Check if user won
+//                            if (isWin()) {
+//                                state = WON;
+//                                System.out.println("User Won");
+//                                break;
+//                            }
 
                             // Determine which mouse button the user pressed
                             switch (mouseButton) {
                                 // Left click
                                 case MouseEvent.BUTTON1:
                                     board[i][j].setState(Tile.LAND);
+                                    numLand++;
+                                    System.out.println(numLand);
                                     if (board[i][j].getNumMines() == 0) {
                                         fillEmptyTiles(board[i][j]);
                                     }
@@ -150,7 +166,6 @@ public class Game implements MouseListener, MouseMotionListener {
                                     else if (board[i][j].getState() != Tile.LAND)
                                         board[i][j].setState(Tile.FLAG);
                                     break;
-
                             }
                         }
                     }
@@ -197,40 +212,41 @@ public class Game implements MouseListener, MouseMotionListener {
         window.repaint();
     }
 
-    public void distributeMines() {
-        int boardX;
-        int boardY;
-        for (int i = 0; i < TOTAL_MINES; i++) {
-            // Generate random (x,y) coordinates
-            boardX = (int) (Math.random() * BOARD_WIDTH);
-            boardY = (int) (Math.random()* BOARD_HEIGHT);
-
-            if (board[boardX][boardY].getIsMine() || board[boardX][boardY].getState() == Tile.LAND) {
-                i--;
-            } else {
-                board[boardX][boardY].setIsMine(true);
-            }
-        }
+    // No mines should be able to generate in a 3 by 3 square around user's starting tile
+    public boolean isSafeZone(int mineX, int mineY, int startX, int startY) {
+        if ((mineX >= startX - 1 && mineX <= startX + 1) && (mineY >= startY - 1 && mineY <= startY + 1))
+            return true;
+        return false;
     }
 
-    public ArrayList<Tile> generateLand(int startRow, int startCol) {
-        ArrayList<Tile> startingLand = new ArrayList<>();
+    // Randomly distributes 40 mines on the board
+    public void distributeMines(int startX, int startY) {
+        int mineX;
+        int mineY;
+        for (int i = 0; i < TOTAL_MINES; i++) {
+            // Generate random (x,y) coordinates
+            mineX = (int) (Math.random() * BOARD_WIDTH);
+            mineY = (int) (Math.random() * BOARD_HEIGHT);
 
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 3; j++) {
-                if (((startRow + (i-2)) >= 0 && (startRow + (i-2)) < Game.BOARD_WIDTH) && ((startCol + (j-1)) >= 0 && (startCol + (j-1)) < Game.BOARD_HEIGHT)) {
-                    startingLand.add(board[startRow + i-2][startCol + j-1]);
-                }
+            // A mine can't spawn on another mine, a piece of land, or in a 3 by 3 grid around the player's first click
+            if (board[mineX][mineY].getIsMine() || board[mineX][mineY].getState() == Tile.LAND || isSafeZone(mineX, mineY, startX, startY)) {
+                i--;
             }
+            else
+                board[mineX][mineY].setIsMine(true);
         }
-
-        return startingLand;
     }
 
     public boolean isLost(int boardX, int boardY) {
         if (board[boardX][boardY].getIsMine()) {
             return true;
         }
+        return false;
+    }
+
+    public boolean isWin() {
+        if (numLand == TOTAL_TILES - TOTAL_MINES)
+            return true;
         return false;
     }
 
@@ -257,9 +273,10 @@ public class Game implements MouseListener, MouseMotionListener {
                     if ((newI >= 0 && newI < Game.BOARD_WIDTH) && (newJ >= 0 && newJ < Game.BOARD_HEIGHT)) {
                         if (board[newI][newJ].getNumMines() == 0 && board[newI][newJ].getState() != Tile.LAND)
                             tilesToExplore.add(board[newI][newJ]);
-                        else {
-                            // Sets all tiles around central to land
+                        else if (board[newI][newJ].getState() != Tile.LAND) {
+                            // Sets all tiles around central tile to land
                             board[newI][newJ].setState(Tile.LAND);
+                            numLand++;
                         }
                     }
                 }
@@ -267,6 +284,7 @@ public class Game implements MouseListener, MouseMotionListener {
 
             tilesToExplore.remove(tile);
             tile.setState(Tile.LAND);
+            numLand++;
 
             if (!tilesToExplore.isEmpty()) {
                 tile = tilesToExplore.getFirst();

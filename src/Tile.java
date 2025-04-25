@@ -47,8 +47,8 @@ public class Tile {
         // Initialize images
         emptyTileImage = emptyImage;
         landTileImage = landImage;
-        flagImage = new ImageIcon("Resources/flag.png").getImage();
-        highlightedTileImage = new ImageIcon("Resources/highlightedTile.png").getImage();
+        flagImage = new ImageIcon("Resources/FlagAnimation/flagAnimation10.png").getImage();
+        highlightedTileImage = new ImageIcon("Resources/Tiles/highlightedTile.png").getImage();
     }
 
     // Getters
@@ -121,7 +121,7 @@ public class Tile {
         }
         if (numMines == 0)
             return;
-        numMinesImage = new ImageIcon("Resources/" + numMines + ".png").getImage();
+        numMinesImage = new ImageIcon("Resources/Numbers/" + numMines + ".png").getImage();
     }
 
     public boolean highlight(int mouseX, int mouseY) {
