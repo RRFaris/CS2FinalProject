@@ -102,7 +102,7 @@ public class Tile {
         this.isHighlighted = isHighlighted;
     }
 
-    public boolean isClicked(int mouseX, int mouseY) {
+    public boolean mouseEntered(int mouseX, int mouseY) {
         if ((mouseX > tileX && mouseX < (tileX + TILE_WIDTH)) && (mouseY > tileY && mouseY < (tileY + TILE_WIDTH)))
             return true;
         return false;
@@ -124,16 +124,11 @@ public class Tile {
         numMinesImage = new ImageIcon("Resources/Numbers/" + numMines + ".png").getImage();
     }
 
-    public boolean highlight(int mouseX, int mouseY) {
-        if ((mouseX > tileX && mouseX < (tileX + TILE_WIDTH)) && (mouseY > tileY && mouseY < (tileY + TILE_WIDTH)))
-            return true;
-        else
-            return false;
-    }
-
     public void draw(Graphics g) {
         Image tileImage = null;
         Image numMinesImage = null;
+
+        // Sets correct images for tile
         if (state == LAND) {
             tileImage = landTileImage;
             numMinesImage = this.numMinesImage;
@@ -146,11 +141,9 @@ public class Tile {
                 tileImage = highlightedTileImage;
         }
 
-
-
+        // Draws tile
         g.drawImage(tileImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
         g.drawImage(numMinesImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
-
 
         // Need to draw flag after others so it doesn't get covered
         if (state == FLAG)

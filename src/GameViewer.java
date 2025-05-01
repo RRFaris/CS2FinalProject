@@ -5,8 +5,6 @@ import java.awt.image.BufferStrategy;
 public class GameViewer extends JFrame {
     private Game game;
 
-    private JButton startButton;
-
     public final int WINDOW_HEIGHT = 800;
     public final int WINDOW_WIDTH = 1000;
 
@@ -23,9 +21,6 @@ public class GameViewer extends JFrame {
 
         // Double buffering stuff
         createBufferStrategy(2);
-
-        // Buttons
-        startButton = new JButton();
     }
 
     // Double buffer
@@ -46,21 +41,28 @@ public class GameViewer extends JFrame {
     }
 
     public void myPaint(Graphics g) {
-        Tile tile = null;
-        if (game.getState() == game.PLAYING) {
-            for (int i = 0; i < game.BOARD_WIDTH; i++) {
-                for (int j = 0; j < game.BOARD_HEIGHT; j++) {
-                    tile = game.getBoard()[i][j];
-                    tile.draw(g);
+        switch(game.getState()) {
+            case Game.WELCOME:
+                for (Button button : game.getButtons()) {
+                    button.draw(g);
+                }
+                break;
 
-                    // Debugging purposes
-                    if (game.getState() == game.LOST && tile.getIsMine()) {
-                        g.setColor(Color.red);
-                        g.fillRect(tile.getTileX(), tile.getTileY(), Tile.TILE_WIDTH, Tile.TILE_WIDTH);
+            case Game.PLAYING:
+                Tile tile = null;
+                for (int i = 0; i < Game.BOARD_WIDTH; i++) {
+                    for (int j = 0; j < game.BOARD_HEIGHT; j++) {
+                        tile = game.getBoard()[i][j];
+                        tile.draw(g);
+
+                        // Debugging purposes
+                        if (game.getState() == game.LOST && tile.getIsMine()) {
+                            g.setColor(Color.red);
+                            g.fillRect(tile.getTileX(), tile.getTileY(), Tile.TILE_WIDTH, Tile.TILE_WIDTH);
+                        }
                     }
                 }
-            }
+                break;
         }
-
     }
 }
