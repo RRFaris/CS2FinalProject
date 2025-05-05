@@ -4,6 +4,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 
 public class Game implements MouseListener, MouseMotionListener, ActionListener {
+    private static final int DELAY = 50;
     private Tile[][] board;
     private final int TOTAL_MINES = 40;
     private final int TOTAL_TILES = 252;
@@ -36,6 +37,10 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
     // Use to set up the mines after user's first click
     int numMouseClicks;
     int numLand;
+    int numFlags;
+
+    // Timer for animation
+    private Timer clock;
 
     public Game() {
         window = new GameViewer(this);
@@ -48,9 +53,9 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
 
         // Initialize buttons
         buttons = new Button[]{
-                  new Button(375, 200, 180, 90, "Play"),
-                  new Button(375, 350, 225, 90, "Options"),
-                  new Button(375, 500, 165, 90, "Quit")
+                  new Button((window.WINDOW_WIDTH - 180) / 2, 300, 180, 90, "Play"),
+                  new Button((window.WINDOW_WIDTH - 225) / 2, 450, 225, 90, "Options"),
+                  new Button((window.WINDOW_WIDTH - 165) / 2, 600, 165, 90, "Quit")
                   };
 
         initializeTileImages();
@@ -61,6 +66,10 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
         // Add mouse and mouse motion listeners
         window.addMouseListener(this);
         window.addMouseMotionListener(this);
+
+        // Begin animation
+        clock = new Timer(DELAY, this);
+        clock.start();
     }
 
     public Tile[][] getBoard() {
@@ -76,7 +85,7 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
     }
 
     public void initializeTileImages() {
-        // Initialize images
+        // Initialize tiles and images
         for (int i = 0; i < BOARD_WIDTH; i++) {
             for (int j = 0; j < BOARD_HEIGHT; j++) {
                 // Make color alternate between tiles
@@ -115,7 +124,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                 }
 
                 numMouseClicks = 0;
-                window.repaint();
                 break;
 
             case PLAYING:
@@ -131,7 +139,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                 break;
 
         }
-        window.repaint();
     }
 
 
@@ -141,13 +148,15 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
         switch(state) {
             case WELCOME:
                 for (Button button : buttons) {
-                    if (!button.mouseEntered(mouseX, mouseY)) {
+                    if (button.getIsClicked()) {
                         button.setIsClicked(false);
+                        state = button.click();
                     }
+
+
                 }
 
                 numMouseClicks = 0;
-                window.repaint();
                 break;
         }
     }
@@ -192,14 +201,13 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                     tile.setHighlighted(false);
             }
         }
-        window.repaint();
     }
 
 
     /// ACTION LISTENER STUFF
     @Override
     public void actionPerformed(ActionEvent e) {
-
+        window.repaint();
     }
 
     // What happens after user's first click
@@ -258,19 +266,25 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                         case MouseEvent.BUTTON1:
                             board[i][j].setState(Tile.LAND);
                             numLand++;
-                            System.out.println(numLand);
+                            // DEBUGGING PURPOSES
+//                            System.out.println(numLand);
                             if (board[i][j].getNumMines() == 0) {
                                 fillEmptyTiles(board[i][j]);
                             }
                             break;
                         case MouseEvent.BUTTON3:
                             // If the user clicks one of their own flags, they can remove it
-                            if (board[i][j].getState() == Tile.FLAG)
+                            if (board[i][j].getState() == Tile.FLAG) {
                                 board[i][j].setState(Tile.EMPTY);
-
-                                // User can not turn anything into a flag
-                            else if (board[i][j].getState() != Tile.LAND)
+                                numFlags--;
+                            }
+                            // User can not turn anything into a flag
+                            else if (board[i][j].getState() != Tile.LAND) {
                                 board[i][j].setState(Tile.FLAG);
+                                numFlags++;
+                            }
+                            // DEBUGGING PURPOSES
+                            System.out.println(numFlags);
                             break;
                     }
                 }

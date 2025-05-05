@@ -70,19 +70,32 @@ public class Button {
         return false;
     }
 
+    public int click() {
+        int state = 0;
+        switch (name) {
+            case "Play":
+                state = Game.PLAYING;
+                break;
+        }
+        return state;
+    }
+
     public void draw(Graphics g) {
+        Image image = null;
+
         if (isHighlighted) {
             if (isClicked) {
-                g.drawImage(pressedImage, buttonX, buttonY, buttonWidth, buttonHeight, window);
+                image = pressedImage;
             }
             else {
-                g.drawImage(highlightedImage, buttonX, buttonY, buttonWidth, buttonHeight, window);
+                image = highlightedImage;
             }
         }
 
-        else
-            g.drawImage(image, buttonX, buttonY, buttonWidth, buttonHeight, window);
+        else {
+            image = this.image;
+        }
 
-
+        g.drawImage(image, buttonX, buttonY, buttonWidth, buttonHeight, window);
     }
 }

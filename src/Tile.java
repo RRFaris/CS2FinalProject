@@ -1,7 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Tile {
+    private static final int MAX_FLAG_INDEX = 9;
+    private static final int NUM_FLAG_FRAMES = 10;
     // States of a tile
     private int state;
     public static final int EMPTY = 0;
@@ -22,7 +25,7 @@ public class Tile {
     private Image emptyTileImage;
     private Image landTileImage;
     private Image numMinesImage;
-    private Image flagImage;
+    private Image[] flagImage;
     private Image highlightedTileImage;
 
     // Window coordinates
@@ -32,6 +35,9 @@ public class Tile {
     // Board coordinates
     private int row;
     private int col;
+
+    // Flag Animation
+    int frameCounter;
 
     public Tile(int tileX, int tileY, int row, int col, Image emptyImage, Image landImage) {
         this.tileX = tileX;
@@ -44,11 +50,17 @@ public class Tile {
         isMine = false;
         numMines = 0;
 
+        frameCounter = 0;
+
         // Initialize images
         emptyTileImage = emptyImage;
         landTileImage = landImage;
-        flagImage = new ImageIcon("Resources/FlagAnimation/flagAnimation10.png").getImage();
         highlightedTileImage = new ImageIcon("Resources/Tiles/highlightedTile.png").getImage();
+
+        flagImage = new Image[NUM_FLAG_FRAMES];
+        for (int i = 0; i < NUM_FLAG_FRAMES; i++) {
+            flagImage[i] = new ImageIcon("Resources/FlagAnimation/flagAnimation" + (i+1) + ".png").getImage();
+        }
     }
 
     // Getters
@@ -96,6 +108,8 @@ public class Tile {
 
     public void setState(int state) {
         this.state = state;
+        frameCounter = 0;
+
     }
 
     public void setHighlighted(boolean isHighlighted) {
@@ -146,7 +160,9 @@ public class Tile {
         g.drawImage(numMinesImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
 
         // Need to draw flag after others so it doesn't get covered
-        if (state == FLAG)
-            g.drawImage(flagImage,tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
+        if (state == FLAG) {
+            g.drawImage(flagImage[frameCounter], tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
+            frameCounter = Math.min(frameCounter + 1, MAX_FLAG_INDEX);
+        }
     }
 }
