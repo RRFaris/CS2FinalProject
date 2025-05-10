@@ -4,9 +4,9 @@ import java.awt.event.*;
 import java.util.ArrayList;
 
 public class Game implements MouseListener, MouseMotionListener, ActionListener {
-    private static final int DELAY = 50;
+    private static final int DELAY = 40;
     private Tile[][] board;
-    private final int TOTAL_MINES = 40;
+    public static final int TOTAL_MINES = 40;
     private final int TOTAL_TILES = 252;
 
     public static final int BOARD_WIDTH = 18;
@@ -15,6 +15,9 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
     // Tile images
     private Image emptyTileImage;
     private Image landTileImage;
+
+    // Mine images
+    private Image[] mineImages;
 
     // Buttons
     private Button[] buttons;
@@ -41,6 +44,10 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
 
     // Timer for animation
     private Timer clock;
+    private long startTime;
+
+    // Timer for player
+    private Timer timer;
 
     public Game() {
         window = new GameViewer(this);
@@ -53,9 +60,8 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
 
         // Initialize buttons
         buttons = new Button[]{
-                  new Button((window.WINDOW_WIDTH - 180) / 2, 300, 180, 90, "Play"),
-                  new Button((window.WINDOW_WIDTH - 225) / 2, 450, 225, 90, "Options"),
-                  new Button((window.WINDOW_WIDTH - 165) / 2, 600, 165, 90, "Quit")
+                  new Button((window.WINDOW_WIDTH - 180) / 2, 420, 180, 90, "Play"),
+                  new Button((window.WINDOW_WIDTH - 165) / 2, 540, 165, 90, "Quit")
                   };
 
         initializeTileImages();
@@ -70,8 +76,12 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
         // Begin animation
         clock = new Timer(DELAY, this);
         clock.start();
+
+        // Timer for the player
+        timer = new Timer(DELAY, this);
     }
 
+    // Getters
     public Tile[][] getBoard() {
         return board;
     }
@@ -84,10 +94,27 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
         return state;
     }
 
+    public long getTime() {
+        return ((System.currentTimeMillis() - startTime) / 1000) % 600;
+    }
+
+    public int getNumFlags() {
+        return numFlags;
+    }
+
     public void initializeTileImages() {
+        // Initialize mine images
+        mineImages = new Image[8];
+        for (int i = 0; i < 8; i++) {
+            mineImages[i] = new ImageIcon("Resources/Mines/mine" + (i+1) + ".png").getImage();
+        }
+
         // Initialize tiles and images
         for (int i = 0; i < BOARD_WIDTH; i++) {
             for (int j = 0; j < BOARD_HEIGHT; j++) {
+                // Assign a mine image to each tile
+                Image mineImage = mineImages[(int) (Math.random() * 8)];
+
                 // Make color alternate between tiles
                 if ((i + j) % 2 == 0) {
                     emptyTileImage = new ImageIcon("Resources/Tiles/emptyLightTile.png").getImage();
@@ -97,7 +124,7 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                     emptyTileImage = new ImageIcon("Resources/Tiles/emptyDarkTile.png").getImage();
                     landTileImage = new ImageIcon("Resources/Tiles/landDarkTile.png").getImage();
                 }
-                board[i][j] = new Tile(window.BOARD_X + (i*Tile.TILE_WIDTH), window.BOARD_Y + (j*Tile.TILE_WIDTH), i, j, emptyTileImage, landTileImage);
+                board[i][j] = new Tile(window.BOARD_X + (i*Tile.TILE_WIDTH), window.BOARD_Y + (j*Tile.TILE_WIDTH), i, j, emptyTileImage, landTileImage, mineImage);
             }
         }
     }
@@ -117,6 +144,7 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
 
         switch(state) {
             case WELCOME:
+                // Check for button presses
                 for (Button button : buttons) {
                     if (button.mouseEntered(mouseX, mouseY)) {
                         button.setIsClicked(true);
@@ -130,6 +158,11 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                 // All the setup stuff that happens right after the user's first click
                 if (numMouseClicks == 1) {
                     firstClick(mouseX, mouseY);
+
+                    // Start player's timer
+                    timer.stop();
+                    startTime = System.currentTimeMillis();
+                    timer.start();
                 }
 
                 // Main game "loop"
@@ -137,7 +170,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                     gameLoop(mouseX, mouseY);
                 }
                 break;
-
         }
     }
 
@@ -145,19 +177,13 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
     /// MOUSE MOTION STUFF
     @Override
     public void mouseReleased(MouseEvent e) {
-        switch(state) {
-            case WELCOME:
-                for (Button button : buttons) {
-                    if (button.getIsClicked()) {
-                        button.setIsClicked(false);
-                        state = button.click();
-                    }
-
-
+        if (state == WELCOME) {
+            for (Button button : buttons) {
+                if (button.getIsClicked()) {
+                    button.setIsClicked(false);
+                    state = button.click();
                 }
-
-                numMouseClicks = 0;
-                break;
+            }
         }
     }
 
@@ -189,17 +215,17 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                     else
                         button.setHighlighted(false);
                 }
-        }
-
-        Tile tile = null;
-        for (int i = 0; i < BOARD_WIDTH; i++) {
-            for (int j = 0; j < BOARD_HEIGHT; j++) {
-                tile = board[i][j];
-                if (tile.mouseEntered(mouseX, mouseY))
-                    tile.setHighlighted(true);
-                else
-                    tile.setHighlighted(false);
-            }
+            case PLAYING:
+                Tile tile = null;
+                for (int i = 0; i < BOARD_WIDTH; i++) {
+                    for (int j = 0; j < BOARD_HEIGHT; j++) {
+                        tile = board[i][j];
+                        if (tile.mouseEntered(mouseX, mouseY))
+                            tile.setHighlighted(true);
+                        else
+                            tile.setHighlighted(false);
+                    }
+                }
         }
     }
 
@@ -226,6 +252,7 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
             }
         }
 
+
         // Distributes mines after first click
         distributeMines(startingTile.getRow(), startingTile.getCol());
 
@@ -250,24 +277,23 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                     // Check if user lost
                     if (mouseButton == MouseEvent.BUTTON1 && isLost(i, j)) {
                         state = LOST;
+                        timer.stop();
                         System.out.println("User Lost");
                         break;
                     }
-                    // Check if user won
-//                    if (isWin()) {
-//                        state = WON;
-//                        System.out.println("User Won");
-//                        break;
-//                    }
 
                     // Determine which mouse button the user pressed
                     switch (mouseButton) {
                         // Left click
                         case MouseEvent.BUTTON1:
-                            board[i][j].setState(Tile.LAND);
-                            numLand++;
+                            if (board[i][j].getState() != Tile.LAND && board[i][j].getState() != Tile.FLAG) {
+                                board[i][j].setState(Tile.LAND);
+                                numLand++;
+                            }
+
                             // DEBUGGING PURPOSES
-//                            System.out.println(numLand);
+                            System.out.println(numLand);
+
                             if (board[i][j].getNumMines() == 0) {
                                 fillEmptyTiles(board[i][j]);
                             }
@@ -289,6 +315,11 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                     }
                 }
             }
+        }
+        // Check if user won
+        if (isWin()) {
+            state = WON;
+            System.out.println("User Won");
         }
     }
 
@@ -319,7 +350,7 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
 
     // Checks if the user has lost
     public boolean isLost(int boardX, int boardY) {
-        if (board[boardX][boardY].getIsMine()) {
+        if (board[boardX][boardY].getIsMine() && board[boardX][boardY].getState() != Tile.FLAG) {
             return true;
         }
         return false;
@@ -353,8 +384,12 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
 
                     // Checks for out of bounds
                     if ((newI >= 0 && newI < Game.BOARD_WIDTH) && (newJ >= 0 && newJ < Game.BOARD_HEIGHT)) {
-                        if (board[newI][newJ].getNumMines() == 0 && board[newI][newJ].getState() != Tile.LAND)
+                        if (board[newI][newJ].getNumMines() == 0 && board[newI][newJ].getState() != Tile.LAND && !board[newI][newJ].getIsExplored()) {
                             tilesToExplore.add(board[newI][newJ]);
+                            board[newI][newJ].setIsExplored(true);
+//                            numLand++;
+                        }
+
                         else if (board[newI][newJ].getState() != Tile.LAND) {
                             // Sets all tiles around central tile to land
                             board[newI][newJ].setState(Tile.LAND);
@@ -366,7 +401,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
 
             tilesToExplore.remove(tile);
             tile.setState(Tile.LAND);
-            numLand++;
 
             if (!tilesToExplore.isEmpty()) {
                 tile = tilesToExplore.getFirst();

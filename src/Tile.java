@@ -3,8 +3,10 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class Tile {
+    // Flag animation
     private static final int MAX_FLAG_INDEX = 9;
     private static final int NUM_FLAG_FRAMES = 10;
+
     // States of a tile
     private int state;
     public static final int EMPTY = 0;
@@ -21,12 +23,18 @@ public class Tile {
 
     private GameViewer window;
 
+    // Use to fill in adjacent empty tiles
+    private boolean isExplored;
+
     // Images
     private Image emptyTileImage;
     private Image landTileImage;
     private Image numMinesImage;
-    private Image[] flagImage;
     private Image highlightedTileImage;
+    private Image mineImage;
+    private Image unecessaryFlagImage;
+    private Image[] flagImage;
+
 
     // Window coordinates
     private int tileX;
@@ -39,7 +47,7 @@ public class Tile {
     // Flag Animation
     int frameCounter;
 
-    public Tile(int tileX, int tileY, int row, int col, Image emptyImage, Image landImage) {
+    public Tile(int tileX, int tileY, int row, int col, Image emptyImage, Image landImage, Image mineImage) {
         this.tileX = tileX;
         this.tileY = tileY;
 
@@ -56,7 +64,10 @@ public class Tile {
         emptyTileImage = emptyImage;
         landTileImage = landImage;
         highlightedTileImage = new ImageIcon("Resources/Tiles/highlightedTile.png").getImage();
+        unecessaryFlagImage = new ImageIcon("Resources/flagUnnecessary.png").getImage();
+        this.mineImage = mineImage;
 
+        // Initialize flag animation images
         flagImage = new Image[NUM_FLAG_FRAMES];
         for (int i = 0; i < NUM_FLAG_FRAMES; i++) {
             flagImage[i] = new ImageIcon("Resources/FlagAnimation/flagAnimation" + (i+1) + ".png").getImage();
@@ -96,9 +107,17 @@ public class Tile {
         return isHighlighted;
     }
 
+    public boolean getIsExplored() {
+        return isExplored;
+    }
+
     // Setters
     public void setIsMine(boolean isMine) {
         this.isMine = isMine;
+    }
+
+    public void setIsExplored(boolean isExplored) {
+        this.isExplored = isExplored;
     }
 
     public void setNumMines(int numMines) {
@@ -138,12 +157,17 @@ public class Tile {
         numMinesImage = new ImageIcon("Resources/Numbers/" + numMines + ".png").getImage();
     }
 
-    public void draw(Graphics g) {
+    public void draw(Graphics g, int state) {
         Image tileImage = null;
         Image numMinesImage = null;
+        Image mineImage = null;
 
         // Sets correct images for tile
-        if (state == LAND) {
+        if (isMine && this.state != FLAG && state == Game.LOST) {
+            mineImage = this.mineImage;
+        }
+
+        if (this.state == LAND) {
             tileImage = landTileImage;
             numMinesImage = this.numMinesImage;
         }
@@ -158,11 +182,17 @@ public class Tile {
         // Draws tile
         g.drawImage(tileImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
         g.drawImage(numMinesImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
+        g.drawImage(mineImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
 
         // Need to draw flag after others so it doesn't get covered
-        if (state == FLAG) {
-            g.drawImage(flagImage[frameCounter], tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
-            frameCounter = Math.min(frameCounter + 1, MAX_FLAG_INDEX);
+        if (this.state == FLAG) {
+            if (state == Game.LOST && !isMine) {
+                g.drawImage(unecessaryFlagImage, tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
+            }
+            else {
+                g.drawImage(flagImage[frameCounter], tileX, tileY, TILE_WIDTH, TILE_WIDTH, window);
+                frameCounter = Math.min(frameCounter + 1, MAX_FLAG_INDEX);
+            }
         }
     }
 }

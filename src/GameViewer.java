@@ -13,6 +13,8 @@ public class GameViewer extends JFrame {
 
     private Image backgroundImage;
     private Image frameImage;
+    private Image titleImage;
+    private Image flagImage;
 
     public GameViewer(Game game) {
         this.game = game;
@@ -27,6 +29,8 @@ public class GameViewer extends JFrame {
 
         backgroundImage = new ImageIcon("Resources/backgroundColor.png").getImage();
         frameImage = new ImageIcon("Resources/frame.png").getImage();
+        titleImage = new ImageIcon("Resources/title.png").getImage();
+        flagImage = new ImageIcon("Resources/FlagAnimation/flagAnimation10.png").getImage();
     }
 
     // Double buffer
@@ -46,10 +50,30 @@ public class GameViewer extends JFrame {
         Toolkit.getDefaultToolkit().sync();
     }
 
+    // Draws the background when ever the user loses or wins
+    public void paintHelper(Graphics g) {
+        Tile tile = null;
+
+        g.drawImage(backgroundImage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, this);
+        for (int i = 0; i < Game.BOARD_WIDTH; i++) {
+            for (int j = 0; j < Game.BOARD_HEIGHT; j++) {
+                // Draw tiles
+                tile = game.getBoard()[i][j];
+                tile.draw(g, game.getState());
+            }
+        }
+        g.drawImage(frameImage, BOARD_X - 2, BOARD_Y - 2, 724, 564, this);
+
+        // Dims the screen
+        g.setColor(new Color(0, 0, 0, 200));
+        g.fillRect(0,0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    }
+
     public void myPaint(Graphics g) {
         switch(game.getState()) {
             case Game.WELCOME:
                 g.drawImage(backgroundImage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, this);
+                g.drawImage(titleImage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, this);
                 for (Button button : game.getButtons()) {
                     button.draw(g);
                 }
@@ -57,26 +81,42 @@ public class GameViewer extends JFrame {
 
             case Game.PLAYING:
                 Tile tile = null;
+                g.setColor(new Color(74,117,44));
+                g.setFont(new Font("Courier New", Font.BOLD, 30));
+
                 g.drawImage(backgroundImage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, this);
+                g.drawImage(flagImage, 150, 50, 50, 50, this);
+                g.drawString(Game.TOTAL_MINES - game.getNumFlags() + "", 200, 90);
+
+                // Draw player's timer
+                g.drawString(game.getTime() + "", 500, 80);
 
                 for (int i = 0; i < Game.BOARD_WIDTH; i++) {
                     for (int j = 0; j < Game.BOARD_HEIGHT; j++) {
+                        // Draw tiles
                         tile = game.getBoard()[i][j];
-                        tile.draw(g);
+                        tile.draw(g, game.getState());
                     }
                 }
                 g.drawImage(frameImage, BOARD_X - 2, BOARD_Y - 2, 724, 564, this);
                 break;
 
             case Game.LOST:
-                for (int i = 0; i < Game.BOARD_WIDTH; i++) {
-                    for (int j = 0; j < Game.BOARD_HEIGHT; j++) {
-                        if (game.getBoard()[i][j].getIsMine()) {
-                            g.setColor(Color.red);
-                            g.fillRect(game.getBoard()[i][j].getTileX(), game.getBoard()[i][j].getTileY(), Tile.TILE_WIDTH, Tile.TILE_WIDTH);
-                        }
-                    }
-                }
+                // Draws general background
+                paintHelper(g);
+
+                g.setColor(new Color(214, 255, 212));
+                g.setFont(new Font("Courier New", Font.BOLD, 80));
+                g.drawString("Game Over", 300, 380);
+                break;
+
+            case Game.WON:
+                // Draws general background
+                paintHelper(g);
+
+                g.setColor(new Color(214, 255, 212));
+                g.setFont(new Font("Courier New", Font.BOLD, 80));
+                g.drawString("You Won!", 300, 380);
                 break;
         }
     }

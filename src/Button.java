@@ -76,6 +76,9 @@ public class Button {
             case "Play":
                 state = Game.PLAYING;
                 break;
+            case "Quit":
+                System.exit(0);
+                break;
         }
         return state;
     }
