@@ -162,7 +162,7 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                     // Start player's timer
                     timer.stop();
                     startTime = System.currentTimeMillis();
-                    timer.start();
+                    timer.restart();
                 }
 
                 // Main game "loop"
@@ -245,7 +245,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
             for (int j = 0; j < BOARD_HEIGHT; j++) {
                 if (board[i][j].mouseEntered(mouseX, mouseY)) {
                     numLand++;
-                    System.out.println(numLand);
                     startingTile = board[i][j];
                     startingTile.setState(Tile.LAND);
                 }
@@ -265,7 +264,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
 
         // Spawns in user's starting area
         fillEmptyTiles(startingTile);
-        System.out.println(numLand);
     }
 
     // Main game "loop"
@@ -278,7 +276,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                     if (mouseButton == MouseEvent.BUTTON1 && isLost(i, j)) {
                         state = LOST;
                         timer.stop();
-                        System.out.println("User Lost");
                         break;
                     }
 
@@ -290,9 +287,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                                 board[i][j].setState(Tile.LAND);
                                 numLand++;
                             }
-
-                            // DEBUGGING PURPOSES
-                            System.out.println(numLand);
 
                             if (board[i][j].getNumMines() == 0) {
                                 fillEmptyTiles(board[i][j]);
@@ -309,8 +303,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
                                 board[i][j].setState(Tile.FLAG);
                                 numFlags++;
                             }
-                            // DEBUGGING PURPOSES
-                            System.out.println(numFlags);
                             break;
                     }
                 }
@@ -319,7 +311,6 @@ public class Game implements MouseListener, MouseMotionListener, ActionListener 
         // Check if user won
         if (isWin()) {
             state = WON;
-            System.out.println("User Won");
         }
     }
 

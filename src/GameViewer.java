@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.io.File;
 
 public class GameViewer extends JFrame {
     private Game game;
@@ -105,7 +106,7 @@ public class GameViewer extends JFrame {
                 // Draws general background
                 paintHelper(g);
 
-                g.setColor(new Color(214, 255, 212));
+                g.setColor(new Color(255, 255, 255));
                 g.setFont(new Font("Courier New", Font.BOLD, 80));
                 g.drawString("Game Over", 300, 380);
                 break;
@@ -114,7 +115,7 @@ public class GameViewer extends JFrame {
                 // Draws general background
                 paintHelper(g);
 
-                g.setColor(new Color(214, 255, 212));
+                g.setColor(new Color(255, 255, 255));
                 g.setFont(new Font("Courier New", Font.BOLD, 80));
                 g.drawString("You Won!", 300, 380);
                 break;
